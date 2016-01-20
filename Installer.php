@@ -8,9 +8,50 @@ class Installer
 {
     public static function postInstall()
     {
+        $projectsPath = dirname(dirname(dirname(__DIR__)));
+        $projectConfigPath = $projectsPath . DIRECTORY_SEPARATOR . "config";
+        $projectEnvironmentsPath = $projectsPath . DIRECTORY_SEPARATOR . "environments";
+        $initializeConfigPath = __DIR__ . DIRECTORY_SEPARATOR . "config";
+        $initializeEnvironmentsPath = __DIR__ . DIRECTORY_SEPARATOR . "environments";
+        $initializeFile = __DIR__ . DIRECTORY_SEPARATOR . "init";
 
+        self::copyDirectory($initializeConfigPath, $projectConfigPath);
+        self::copyDirectory($initializeEnvironmentsPath, $projectEnvironmentsPath);
+        self::updateGitignoreFile($projectsPath);
+        copy($initializeFile, $projectsPath . DIRECTORY_SEPARATOR . "init");
     }
 
+    /**
+     * Create the .gitignore file to ignore environments
+     */
+    public static function updateGitignoreFile($projectsPath)
+    {
+        $configGitignoreContent = <<<EOF
+/local
+/testing
+/production
+
+EOF;
+        $configGitignoreFile = $projectsPath . DIRECTORY_SEPARATOR . "config" . DIRECTORY_SEPARATOR . ".gitignore";
+        if (is_file($configGitignoreFile)) {
+            file_put_contents($configGitignoreFile, $configGitignoreContent);
+        }
+
+        $rootGitignoreContent = <<<EOF
+/node_modules
+Homestead.yaml
+Homestead.json
+.env
+.env.example
+artisan
+/nginx
+
+EOF;
+        $rootGitignoreFile = $projectsPath . DIRECTORY_SEPARATOR . ".gitignore";
+        if (is_file($rootGitignoreFile)) {
+            file_put_contents($rootGitignoreFile, $rootGitignoreContent);
+        }
+    }
     /**
      * Copies a whole directory as another one.
      * The files and sub-directories will also be copied over.
